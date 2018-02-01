@@ -99,6 +99,14 @@ def getKeywordInQuestion(question):
 
     return keyword
 
+# 获得带最的关键词
+def getKeywordMostInQuestion(question):
+    keyword = None
+    position = question.find(u'最')
+    if position != -1:
+        keyword = question[position:position+2]
+    return keyword
+
 #百度搜索词频，结果数判断
 def baiduSearch(question, answers, is_opposite):
     # 两种方式进行判断
@@ -167,6 +175,43 @@ def baiduBaikeSearch(name, answers, is_opposite):
         return -1
     return select
 
+#百度百科搜索
+def baiduBaikeSearchMost(word, answers, is_opposite):
+    headers = {
+        'Host': 'baike.baidu.com',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6',
+        'Accept-Encoding': 'gzip, deflate',
+        'Upgrade-Insecure-Requests': '1'
+    }
+
+    words_count = []
+    words_total_count = 0
+
+    print(u'%-15s' * 2 % (u'', u'百科词频'))
+    for answer in answers:
+        req_url = u'http://baike.baidu.com/api/openapi/BaikeLemmaCardApi?scope=103&format=json&appid=379020&%s&bk_length=600' % urllib.urlencode({'bk_key': answer.encode('utf8')})
+        req = urllib2.Request(req_url, None, headers)
+        response = urllib2.urlopen(req)
+        html = response.read()
+        html_decode = html.decode('raw_unicode_escape')
+
+        word_count = html_decode.count(word)
+        words_count.append(word_count)
+
+        print(u'%-15s' * 2 % (answer, word_count))
+        words_total_count += word_count
+    print "==================="
+    if words_total_count > 0:
+        if is_opposite:
+            select = solve_utils.find_min_index(words_count)
+        else:
+            select = solve_utils.find_max_index(words_count)
+    else:
+        return -1
+    return select
+
 #解题策略
 def AISolve(value):
     json_obj = json.loads(value)
@@ -200,7 +245,14 @@ def AISolve(value):
                 print u"1.百度百科推荐答案：  " + answers[baike_select]
                 recommend_answer = answers[baike_select]
         else:
-            print u"1.未发现关键词"
+            keyword = getKeywordMostInQuestion(question)
+            if keyword is not None:
+                baike_select = baiduBaikeSearchMost(keyword, answers, is_opposite)
+                if baike_select > -1:
+                    print u"1.百度百科推荐答案：  " + answers[baike_select]
+                    recommend_answer = answers[baike_select]
+                else:
+                    print u"1.未发现关键词"
 
         print u"2.搜狗汪酱推荐答案：  " + json_obj['recommend']
         if ((recommend_answer is None) and (json_obj['recommend'].find(u'啊呀')) == -1):
