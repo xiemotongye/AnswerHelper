@@ -8,7 +8,7 @@ import config
 import solve_utils
 import problem_utils
 import re
-import urllib2
+import urllib, urllib2
 
 result_set = set([])
 
@@ -64,6 +64,41 @@ def isOpposite(question):
         is_opposite = False
     return is_opposite
 
+#获得书名号，引号内的关键词
+def getKeywordInQuestion(question):
+    rule = u'《(.*?)》'
+    keyword = None
+    slotList = re.findall(rule, question)
+    if len(slotList) > 0:
+        keyword = slotList[0]
+
+    rule = u'“(.*?)”'
+    slotList = re.findall(rule, question)
+    if len(slotList) > 0:
+        keyword = slotList[0]
+
+    rule = u'"(.*?)"'
+    slotList = re.findall(rule, question)
+    if len(slotList) > 0:
+        keyword = slotList[0]
+
+    rule = u'【(.*?)】'
+    slotList = re.findall(rule, question)
+    if len(slotList) > 0:
+        keyword = slotList[0]
+
+    rule = u'「(.*?)」'
+    slotList = re.findall(rule, question)
+    if len(slotList) > 0:
+        keyword = slotList[0]
+
+    rule = u'『(.*?)』'
+    slotList = re.findall(rule, question)
+    if len(slotList) > 0:
+        keyword = slotList[0]
+
+    return keyword
+
 #百度搜索词频，结果数判断
 def baiduSearch(question, answers, is_opposite):
     # 两种方式进行判断
@@ -76,6 +111,7 @@ def baiduSearch(question, answers, is_opposite):
         print(u'%-15s' * 3 % (answer, word_count, search_num))
         words_total_count += word_count
 
+    select = -1
     print "==================="
     # 词频都不为零，则使用词频推荐答案
     if words_total_count > 0:
@@ -91,6 +127,46 @@ def baiduSearch(question, answers, is_opposite):
             select = solve_utils.find_max_index(search_count)
     return select
 
+#百度百科搜索
+def baiduBaikeSearch(name, answers, is_opposite):
+    headers = {
+        'Host': 'baike.baidu.com',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7,ja;q=0.6',
+        'Accept-Encoding': 'gzip, deflate',
+        'Upgrade-Insecure-Requests': '1'
+    }
+
+    req_url = u'http://baike.baidu.com/api/openapi/BaikeLemmaCardApi?scope=103&format=json&appid=379020&%s&bk_length=600' % urllib.urlencode({'bk_key': name.encode('utf8')})
+    req = urllib2.Request(req_url, None, headers)
+    response = urllib2.urlopen(req)
+    html = response.read()
+    html_decode = html.decode('raw_unicode_escape')
+    
+    print(u'%-15s' * 2 % (u'', u'百科词频'))
+
+    words_total_count = 0
+    words_count = [html_decode.count(answer) for answer in answers]
+    for answer, word_count in zip(answers, words_count):
+        print(u'%-15s' * 2 % (answer, word_count))
+        words_total_count += word_count
+
+    try:
+        print u'百科解析：' + json.loads(html)['abstract']
+    except KeyError, e:
+        print u'百度百科找不到摘要'
+
+    print "==================="
+    if words_total_count > 0:
+        if is_opposite:
+            select = solve_utils.find_min_index(words_count)
+        else:
+            select = solve_utils.find_max_index(words_count)
+    else:
+        return -1
+    return select
+
 #解题策略
 def AISolve(value):
     json_obj = json.loads(value)
@@ -98,6 +174,7 @@ def AISolve(value):
     # 获取题干和选项
     question = json_obj['title']
     answers = json_obj['answers']
+    recommend_answer = None
 
     # 打印题干和选项
     print question
@@ -112,14 +189,28 @@ def AISolve(value):
             print u"！！！注意否定！！！"
             print "==================="
 
-        # TODO:第一优先级百度百科
-
         # 第三优先级百度搜索
         baidu_select = baiduSearch(question, answers, is_opposite)
 
-        print u"2.搜狗汪酱推荐答案：  " + json_obj['recommend']
-        print u"3.百度搜索推荐答案：  " + answers[baidu_select]
+        # 第一优先级百度百科
+        keyword = getKeywordInQuestion(question)
+        if keyword is not None:
+            baike_select = baiduBaikeSearch(keyword, answers, is_opposite)
+            if baike_select > -1:
+                print u"1.百度百科推荐答案：  " + answers[baike_select]
+                recommend_answer = answers[baike_select]
+        else:
+            print u"1.未发现关键词"
 
+        print u"2.搜狗汪酱推荐答案：  " + json_obj['recommend']
+        if ((recommend_answer is None) and (not json_obj['recommend'].find(u'啊呀'))):
+            recommend_answer = json_obj['recommend']
+
+        print u"3.百度搜索推荐答案：  " + answers[baidu_select]
+        if recommend_answer is None :
+            recommend_answer = answers[baidu_select]
+
+    print u"综上推荐答案：  " + recommend_answer
     print ""
     # print value
 
