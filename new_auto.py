@@ -124,16 +124,19 @@ def baiduSearch(question, answers, is_opposite):
     # 词频都不为零，则使用词频推荐答案
     if words_total_count > 0:
         if is_opposite:
-            select = solve_utils.find_min_index(words_count)
+            select = solve_utils.find_min_index2(words_count, search_count)
+            return select
         else:
-            select = solve_utils.find_max_index(words_count)
+            select = solve_utils.find_max_index2(words_count, search_count)
+            return select
     # 词频都为零，则使用搜索结果数推荐答案
     else:
         if is_opposite:
             select = solve_utils.find_min_index(search_count)
+            return select
         else:
             select = solve_utils.find_max_index(search_count)
-    return select
+            return select
 
 #百度百科搜索
 def baiduBaikeSearch(name, answers, is_opposite):
@@ -162,7 +165,7 @@ def baiduBaikeSearch(name, answers, is_opposite):
 
     try:
         print u'百科解析：' + json.loads(html)['abstract']
-    except KeyError, e:
+    except (KeyError,ValueError), e:
         print u'百度百科找不到摘要'
 
     print "==================="
@@ -221,12 +224,18 @@ def AISolve(value):
     answers = json_obj['answers']
     recommend_answer = None
 
+    # test data
+    # question = u'战国时秦国统一六国，六国中第三个被灭的诸侯国是？'
+    # answers = [u'赵', u'魏', u'楚']
+
     # 打印题干和选项
     print question
     if len(answers) > 0:
         print "A." + answers[0] + "  B." + answers[1] + "  C." + answers[2]
         print "==================="
         print u"分析: " + json_obj['search_infos'][0]['summary']
+        print u"搜狗汪酱推荐答案：  " + json_obj['recommend']
+        # print value.decode('raw_unicode_escape')
         print "==================="
 
         is_opposite = isOpposite(question)
@@ -242,7 +251,7 @@ def AISolve(value):
         if keyword is not None:
             baike_select = baiduBaikeSearch(keyword, answers, is_opposite)
             if baike_select > -1:
-                print u"1.百度百科推荐答案：  " + answers[baike_select]
+                print u"百度百科推荐答案：  " + answers[baike_select]
                 recommend_answer = answers[baike_select]
         else:
             keyword = getKeywordMostInQuestion(question)
@@ -260,8 +269,9 @@ def AISolve(value):
         if recommend_answer is None :
             recommend_answer = answers[baidu_select]
 
-    print u"综上推荐答案：  " + recommend_answer
-    print ""
+    if recommend_answer is not None:
+        print u"综上推荐答案：  " + recommend_answer
+        print ""
     # print value
 
 #使用搜狗搜索（https://www.sogou.com/）的api自动解答
@@ -273,6 +283,6 @@ while(True):
                 AISolve(value)
         time.sleep(0.5)
     #网络连接错误1分钟后重试
-    except urllib2.URLError, e:
+    except (urllib2.URLError, urllib2.HTTPError), e:
         print e.message
-        time.sleep(60)
+        time.sleep(3)

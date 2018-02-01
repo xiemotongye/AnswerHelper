@@ -38,7 +38,6 @@ def search_count(question, answers):
         counts.append(int(m.groups()[0].replace(',', '')) if m is not None else 0)
     return counts
 
-
 # 找到最符合的
 def find_max_index(counts):
     return counts.index(max(counts))
@@ -52,3 +51,45 @@ def find_min_index(counts):
 # 判断结果是否重复
 def has_repeat(counts, num):
     return counts.count(counts[num])
+
+# 找到最符合的
+def find_max_index2(counts, counts2):
+    the_max = max(counts)
+    #如果有多个相同的最大值，传入这几个最大值对应的第二组参数
+    max_list = []
+    #第二组参数的原始index
+    max_index_list = []
+
+    index = 0
+    for count in counts:
+        if count == the_max:
+            max_list.append(counts2[index])
+            max_index_list.append(index)
+        index += 1
+
+    if len(max_list) > 1:
+        second_index = find_max_index(max_list)
+        return max_index_list[second_index]
+    else :
+        return counts.index(max(counts))
+
+# 找到最不符合的
+def find_min_index2(counts, counts2):
+    the_min = min(counts)
+    #如果有多个相同的最大值，传入这几个最大值对应的第二组参数
+    min_list = []
+    #第二组参数的原始index
+    min_index_list = []
+
+    index = 0
+    for count in counts:
+        if count == the_min:
+            min_list.append(counts2[index])
+            min_index_list.append(index)
+        index += 1
+
+    if len(min_list) > 1:
+        second_index = find_min_index(min_list)
+        return min_index_list[second_index]
+    else :
+        return counts.index(min(counts))

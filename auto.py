@@ -5,6 +5,7 @@ import http_utils
 import json
 import time
 import config
+import urllib2
 
 result_set = set([])
 
@@ -29,8 +30,12 @@ def display(value):
 
 #使用搜狗搜索（https://www.sogou.com/）的api自动解答
 while(True):
-    for value in http_utils.getAutoValue():
-        if not isInSet(value):
-            result_set.add(value)
-            display(value)
-    time.sleep(0.5)
+    try:
+        for value in http_utils.getAutoValue():
+            if not isInSet(value):
+                result_set.add(value)
+                display(value)
+        time.sleep(0.5)
+    except urllib2.URLError, e:
+        print e.message
+        time.sleep(3)
