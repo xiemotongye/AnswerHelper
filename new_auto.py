@@ -60,7 +60,7 @@ def isOpposite(question):
     is_opposite = (hasWordInQuestion(question, u'不') or hasWordInQuestion(question, u'没') or hasWordInQuestion(question, u'无') or hasWordInQuestion(question, u'错'))
 
     # 排除特殊词语
-    if (question.find(u'不丹') or question.find(u'不错') or question.find(u'没错') or question.find(u'无锡')):
+    if ((question.find(u'不丹') != -1) or (question.find(u'不错') != -1) or (question.find(u'没错') != -1) or (question.find(u'无锡') != -1)):
         is_opposite = False
     return is_opposite
 
@@ -203,7 +203,7 @@ def AISolve(value):
             print u"1.未发现关键词"
 
         print u"2.搜狗汪酱推荐答案：  " + json_obj['recommend']
-        if ((recommend_answer is None) and (not json_obj['recommend'].find(u'啊呀'))):
+        if ((recommend_answer is None) and (json_obj['recommend'].find(u'啊呀')) == -1):
             recommend_answer = json_obj['recommend']
 
         print u"3.百度搜索推荐答案：  " + answers[baidu_select]
