@@ -249,16 +249,14 @@ def AISolve(value):
             if keyword is not None:
                 baike_select = baiduBaikeSearchMost(keyword, answers, is_opposite)
                 if baike_select > -1:
-                    print u"1.百度百科推荐答案：  " + answers[baike_select]
+                    print u"百度百科推荐答案：  " + answers[baike_select]
                     recommend_answer = answers[baike_select]
-                else:
-                    print u"1.未发现关键词"
 
-        print u"2.搜狗汪酱推荐答案：  " + json_obj['recommend']
+        print u"搜狗汪酱推荐答案：  " + json_obj['recommend']
         if ((recommend_answer is None) and (json_obj['recommend'].find(u'啊呀')) == -1):
             recommend_answer = json_obj['recommend']
 
-        print u"3.百度搜索推荐答案：  " + answers[baidu_select]
+        print u"百度搜索推荐答案：  " + answers[baidu_select]
         if recommend_answer is None :
             recommend_answer = answers[baidu_select]
 
