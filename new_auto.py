@@ -12,6 +12,9 @@ import urllib, urllib2
 
 result_set = set([])
 
+baike_confidence = 0
+baidu_confidence = 0
+
 #判断题目是否进行过展示，使用set去重
 def isInSet(value):
     return value in result_set
@@ -125,18 +128,19 @@ def baiduSearch(question, answers, is_opposite):
     if words_total_count > 0:
         if is_opposite:
             select = solve_utils.find_min_index2(words_count, search_count)
-            return select
         else:
             select = solve_utils.find_max_index2(words_count, search_count)
-            return select
     # 词频都为零，则使用搜索结果数推荐答案
     else:
         if is_opposite:
             select = solve_utils.find_min_index(search_count)
-            return select
         else:
             select = solve_utils.find_max_index(search_count)
-            return select
+
+    # 百度搜索置信度
+    if select > -1:
+        baidu_confidence = words_count[select]
+    return select
 
 #百度百科搜索
 def baiduBaikeSearch(name, answers, is_opposite):
@@ -180,6 +184,10 @@ def baiduBaikeSearch(name, answers, is_opposite):
             select = solve_utils.find_max_index(words_count)
     else:
         return -1
+
+    # 百度百科置信度
+    if select > -1:
+        baike_confidence = words_count[select]
     return select
 
 #百度百科搜索
@@ -217,6 +225,10 @@ def baiduBaikeSearchMost(word, answers, is_opposite):
             select = solve_utils.find_max_index(words_count)
     else:
         return -1
+
+    # 百度百科置信度
+    if select > -1:
+        baike_confidence = words_count[select]
     return select
 
 #解题策略
@@ -227,6 +239,10 @@ def AISolve(value):
     question = json_obj['title']
     answers = json_obj['answers']
     recommend_answer = None
+    
+    # 每次置信度置为零
+    baike_confidence = 0
+    baidu_confidence = 0
 
     # test data
     # question = u'战国时秦国统一六国，六国中第三个被灭的诸侯国是？'
@@ -274,6 +290,10 @@ def AISolve(value):
         print u"百度搜索推荐答案：  " + answers[baidu_select]
         if recommend_answer is None :
             recommend_answer = answers[baidu_select]
+
+    # 在非否定状态下，如果百度搜索词频达到4或以上，且远高于百度百科，则推荐百度搜索
+    if ((not is_opposite) and (baidu_confidence > 3) and (baidu_confidence >= 2 * baike_confidence)) :
+        recommend_answer = answers[baidu_select]
 
     if recommend_answer is not None:
         print ""
