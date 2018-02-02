@@ -60,7 +60,7 @@ def isOpposite(question):
     is_opposite = (hasWordInQuestion(question, u'不') or hasWordInQuestion(question, u'没') or hasWordInQuestion(question, u'无') or hasWordInQuestion(question, u'错'))
 
     # 排除特殊词语
-    if ((question.find(u'不丹') != -1) or (question.find(u'不错') != -1) or (question.find(u'没错') != -1) or (question.find(u'无锡') != -1)):
+    if (hasWordInQuestion(question, u'不丹') or hasWordInQuestion(question, u'不错') or hasWordInQuestion(question, u'没错') or hasWordInQuestion(question, u'无锡') or hasWordInQuestion(question, u'狗不理')):
         is_opposite = False
     return is_opposite
 
@@ -154,6 +154,10 @@ def baiduBaikeSearch(name, answers, is_opposite):
     response = urllib2.urlopen(req)
     html = response.read()
     html_decode = html.decode('raw_unicode_escape')
+
+    # 如果没有内容
+    if len(html_decode) < 5:
+        return -1
     
     print(u'%-15s' * 2 % (u'', u'百科词频'))
 
@@ -263,14 +267,18 @@ def AISolve(value):
 
         print u"搜狗汪酱推荐答案：  " + json_obj['recommend']
         if ((recommend_answer is None) and (json_obj['recommend'].find(u'啊呀')) == -1):
-            recommend_answer = json_obj['recommend']
+            # 搜狗对否定句式支持不好，否定句式推荐百度搜索答案
+            if not is_opposite:
+                recommend_answer = json_obj['recommend']
 
         print u"百度搜索推荐答案：  " + answers[baidu_select]
         if recommend_answer is None :
             recommend_answer = answers[baidu_select]
 
     if recommend_answer is not None:
+        print ""
         print u"综上推荐答案：  " + recommend_answer
+        print ""
         print ""
     # print value
 
