@@ -247,7 +247,8 @@ def AISolve(value):
     # test data
     # question = u'战国时秦国统一六国，六国中第三个被灭的诸侯国是？'
     # answers = [u'赵', u'魏', u'楚']
-
+    is_opposite = isOpposite(question)
+    
     # 打印题干和选项
     print question
     if len(answers) > 0:
@@ -258,7 +259,6 @@ def AISolve(value):
         # print value.decode('raw_unicode_escape')
         print "==================="
 
-        is_opposite = isOpposite(question)
         if is_opposite:
             print u"！！！注意否定！！！"
             print "==================="
