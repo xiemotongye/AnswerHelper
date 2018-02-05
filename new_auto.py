@@ -313,4 +313,4 @@ while(True):
     #网络连接错误1分钟后重试
     except (urllib2.URLError, urllib2.HTTPError), e:
         print e.message
-        time.sleep(3)
+        time.sleep(1)
