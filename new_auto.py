@@ -63,7 +63,7 @@ def isOpposite(question):
     is_opposite = (hasWordInQuestion(question, u'不') or hasWordInQuestion(question, u'没') or hasWordInQuestion(question, u'无') or hasWordInQuestion(question, u'错'))
 
     # 排除特殊词语
-    if (hasWordInQuestion(question, u'不丹') or hasWordInQuestion(question, u'不错') or hasWordInQuestion(question, u'没错') or hasWordInQuestion(question, u'无锡') or hasWordInQuestion(question, u'狗不理')):
+    if (hasWordInQuestion(question, u'不丹') or hasWordInQuestion(question, u'不错') or hasWordInQuestion(question, u'没错') or hasWordInQuestion(question, u'无锡') or hasWordInQuestion(question, u'狗不理') or hasWordInQuestion(question, u'沉没')):
         is_opposite = False
     return is_opposite
 
@@ -247,6 +247,7 @@ def AISolve(value):
     # test data
     # question = u'战国时秦国统一六国，六国中第三个被灭的诸侯国是？'
     # answers = [u'赵', u'魏', u'楚']
+    is_opposite = isOpposite(question)
 
     # 打印题干和选项
     print question
@@ -258,7 +259,6 @@ def AISolve(value):
         # print value.decode('raw_unicode_escape')
         print "==================="
 
-        is_opposite = isOpposite(question)
         if is_opposite:
             print u"！！！注意否定！！！"
             print "==================="
